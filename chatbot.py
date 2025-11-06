@@ -6,54 +6,80 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-class FastChatBot:
-    def __init__(self, model_name: str = "microsoft/DialoGPT-medium"):
+class RussianChatBot:
+    def __init__(self, model_name: str = "inkoziev/rugpt_chitchat"):
         self.model_name = model_name
         self.history: List[Tuple[str, str]] = []
 
-        print(f"Загрузка модели {model_name}...")
+        print(f"Загрузка русскоязычной модели {model_name}...")
 
-        # Используем 4-битное квантование для скорости и экономии памяти
+        # Используем пайплайн для простоты
         self.chat_pipeline = pipeline(
             "text-generation",
             model=model_name,
             tokenizer=model_name,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            load_in_4bit=True,  # Ускоряет работу в 2-3 раза
-            low_cpu_mem_usage=True
+            device_map="auto"
         )
+        print("Русскоязычная модель загружена и готова к общению!")
 
-        print("Модель загружена и готова к работе!")
-
-    def chat(self, message: str, max_length: int = 200, temperature: float = 0.7) -> str:
+    def chat(self, message: str) -> str:
         """Основной метод для общения с ботом"""
+        try:
+            # Формируем промпт в формате, который понимает модель
+            prompt = self._build_prompt(message)
 
-        # Формируем контекст из истории
-        context = ""
-        for user_msg, bot_msg in self.history[-4:]:  # Берем последние 4 обмена
-            context += f"Пользователь: {user_msg}\nБот: {bot_msg}\n"
-
-        prompt = f"{context}Пользователь: {message}\nБот:"
-
-        # Генерируем ответ
-        with torch.no_grad():  # Отключаем градиенты для ускорения
+            # Генерируем ответ
             response = self.chat_pipeline(
                 prompt,
-                max_new_tokens=max_length,
-                temperature=temperature,
+                max_new_tokens=50,  # Ограничиваем длину ответа
+                temperature=0.8,
                 do_sample=True,
-                pad_token_id=self.chat_pipeline.tokenizer.eos_token_id,
-                repetition_penalty=1.1
+                num_return_sequences=1,
+                repetition_penalty=1.1,
+                truncation=True
             )[0]['generated_text']
 
-        # Извлекаем только новый ответ
-        bot_response = response.replace(prompt, "").strip()
+            # Извлекаем только ответ бота
+            bot_response = self._extract_bot_response(response, prompt)
 
-        # Сохраняем в историю
-        self.history.append((message, bot_response))
+            # Сохраняем в историю
+            self.history.append((message, bot_response))
 
-        return bot_response
+            # Ограничиваем размер истории
+            if len(self.history) > 10:
+                self.history.pop(0)
+
+            return bot_response
+
+        except Exception as e:
+            return f"Извините, произошла ошибка: {str(e)}"
+
+    def _build_prompt(self, new_message: str) -> str:
+        """Строит промпт в правильном формате для модели"""
+        prompt = ""
+
+        # Добавляем историю диалога
+        for user_msg, bot_msg in self.history[-3:]:  # Берем последние 3 обмена
+            prompt += f"- {user_msg}\n- {bot_msg}\n"
+
+        # Добавляем новое сообщение
+        prompt += f"- {new_message}\n-"
+
+        return prompt
+
+    def _extract_bot_response(self, full_response: str, prompt: str) -> str:
+        """Извлекает ответ бота из полного текста"""
+        # Убираем промпт
+        response = full_response.replace(prompt, "").strip()
+
+        # Убираем все после следующего "-" (начало нового сообщения)
+        if '\n-' in response:
+            response = response.split('\n-')[0]
+
+        # Очищаем от лишних пробелов
+        response = ' '.join(response.split())
+
+        return response if response else "Здравствуйте! Рад общению!"
 
     def clear_history(self):
         """Очистить историю диалога"""
@@ -66,28 +92,38 @@ class FastChatBot:
 
 
 class LightweightChatBot:
-    """Сверхлегкая версия для слабых компьютеров"""
+    """Облегченная версия с той же моделью"""
 
     def __init__(self):
-        print("Загрузка легкой модели...")
-
-        # Самая быстрая модель для диалогов
+        print("Загрузка облегченного русскоязычного бота...")
         self.chat_pipeline = pipeline(
             "text-generation",
-            model="microsoft/DialoGPT-small",  # Очень легкая
+            model="inkoziev/rugpt_chitchat",
             device_map="auto"
         )
-        print("Легкая модель загружена!")
+        self.history = []
+        print("Бот загружен!")
 
     def chat(self, message: str) -> str:
-        prompt = f"Пользователь: {message}\nБот:"
+        # Простой промпт без сложной истории
+        prompt = f"- {message}\n-"
 
         response = self.chat_pipeline(
             prompt,
-            max_new_tokens=100,
-            temperature=0.8,
+            max_new_tokens=40,
+            temperature=0.9,
             do_sample=True,
-            pad_token_id=self.chat_pipeline.tokenizer.eos_token_id
+            num_return_sequences=1
         )[0]['generated_text']
 
-        return response.replace(prompt, "").strip()
+        bot_response = response.replace(prompt, "").strip()
+
+        # Очищаем ответ
+        if '\n' in bot_response:
+            bot_response = bot_response.split('\n')[0]
+
+        return bot_response if bot_response else "Привет!"
+
+    def clear_history(self):
+        self.history.clear()
+        print("История очищена!")
