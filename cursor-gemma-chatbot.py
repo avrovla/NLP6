@@ -130,7 +130,13 @@ class GemmaChatbot:
 
 
 def main():
-    """Main function to run the chatbot."""
+    """
+    Main function to run the chatbot.
+    
+    This function initializes the Gemma chatbot with the local model,
+    starts an interactive chat session, and handles user input/output.
+    The chatbot runs until the user types 'exit', 'quit', or presses Ctrl+C.
+    """
     # Initialize chatbot
     bot = GemmaChatbot()
     
