@@ -167,7 +167,29 @@ class GemmaChatbot:
         response += "Is there anything specific you'd like to know about these materials?"
         return response
     
-    def chat(self, message: str, max_new_tokens: int = 256, temperature: float = 0.7) -> str:
+    def format_materials_for_llm(self, materials: list) -> str:
+        """Format materials data as a context string for the LLM."""
+        if not materials:
+            return "No materials found."
+        
+        context = "Materials database:\n"
+        for i, mat in enumerate(materials[:10], 1):  # Limit to 10 for context
+            formula = mat.get('Formula', 'N/A')
+            crystal_system = mat.get('CrystalSystem', 'N/A')
+            energy_above_hull = mat.get('EnergyAboveHull', 'N/A')
+            formation_energy = mat.get('FormationEnergy', 'N/A')
+            atoms = mat.get('Atoms', 'N/A')
+            
+            context += f"{i}. Formula: {formula}, Crystal System: {crystal_system}, "
+            context += f"Energy Above Hull: {energy_above_hull} eV/atom, "
+            context += f"Formation Energy: {formation_energy} eV/atom, Atoms: {atoms}\n"
+        
+        if len(materials) > 10:
+            context += f"... and {len(materials) - 10} more materials.\n"
+        
+        return context
+    
+    def chat(self, message: str, max_new_tokens: int = 512, temperature: float = 0.7) -> str:
         """
         Generate a response to the user's message.
         
@@ -186,21 +208,41 @@ class GemmaChatbot:
         if self.is_material_query(message) and self.materials:
             try:
                 materials = self.search_materials(message)
-                return self.format_material_response(materials, message)
+                
+                if not materials:
+                    materials_context = "No materials found matching the query."
+                else:
+                    materials_context = self.format_materials_for_llm(materials)
+                
+                # Create a prompt that includes the materials data and asks LLM to respond naturally
+                prompt = f"""<start_of_turn>user
+You are a helpful and polite assistant specializing in materials science, particularly materials containing Titanium (Ti). 
+
+Here is information from the materials database:
+{materials_context}
+
+The user asked: {message}
+
+Please provide a polite, helpful, and natural response about these materials. Be conversational and informative. If asked about stable materials, explain that stable materials have Energy Above Hull equal to zero.<end_of_turn>
+<start_of_turn>model
+"""
             except Exception as e:
                 return f"I'm sorry, I encountered an error while searching for materials: {str(e)}"
         
         # Handle non-material queries or if materials aren't loaded
-        if self.is_material_query(message) and not self.materials:
+        elif self.is_material_query(message) and not self.materials:
             return "I apologize, but I'm unable to access the materials database at the moment. The materials.json file may not be available."
         
         # For general conversation, use the LLM
-        try:
+        else:
             # Format prompt in Gemma chat format with polite instructions
             prompt = f"""<start_of_turn>user
 Please respond politely and helpfully. {message}<end_of_turn>
 <start_of_turn>model
 """
+        
+        # Generate response using LLM
+        try:
             
             # Tokenize input
             inputs = self.tokenizer(prompt, return_tensors="pt")
