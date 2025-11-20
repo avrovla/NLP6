@@ -1,0 +1,149 @@
+[
+    {
+      "Formula": "Ti2AlC",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.699,
+      "Atoms": "Ti-Al-C"
+    },
+    {
+      "Formula": "Ti3AlC",
+      "CrystalSystem": "Cubic",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.592,
+      "Atoms": "Ti-Al-C"
+    },
+    {
+      "Formula": "Ti3AlC2",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.761,
+      "Atoms": "Ti-Al-C"
+    },
+    {
+      "Formula": "Ti5Al2C3",
+      "CrystalSystem": "Trigonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.738,
+      "Atoms": "Ti-Al-C"
+    },
+    {
+      "Formula": "Ti2AlN",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -1.29,
+      "Atoms": "Ti-Al-N"
+    },
+    {
+      "Formula": "Ti4AlN3",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -1.64,
+      "Atoms": "Ti-Al-N"
+    },
+    {
+      "Formula": "Ti3AlN",
+      "CrystalSystem": "Cubic",
+      "EnergyAboveHull": 0.03,
+      "FormationEnergy": -1.03,
+      "Atoms": "Ti-Al-N"
+    },
+    {
+      "Formula": "TiAlN2",
+      "CrystalSystem": "Trigonal",
+      "EnergyAboveHull": 0.21,
+      "FormationEnergy": -1.6,
+      "Atoms": "Ti-Al-N"
+    },
+    {
+      "Formula": "Ti3SiC2",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.911,
+      "Atoms": "Ti-Si-C"
+    },
+    {
+      "Formula": "Ti5Si3C",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.857,
+      "Atoms": "Ti-Si-C"
+    },
+    {
+      "Formula": "Ti2SiC",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0.03,
+      "FormationEnergy": -0.849,
+      "Atoms": "Ti-Si-C"
+    },
+    {
+      "Formula": "Ti3Si6N11",
+      "CrystalSystem": "Tetragonal",
+      "EnergyAboveHull": 0.38,
+      "FormationEnergy": -1.13,
+      "Atoms": "Ti-Si-N"
+    },
+    {
+      "Formula": "TiPN3",
+      "CrystalSystem": "Monoclinic",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -1.06,
+      "Atoms": "Ti-P-N"
+    },
+    {
+      "Formula": "TiPN3",
+      "CrystalSystem": "Orthorhombic",
+      "EnergyAboveHull": 0.03,
+      "FormationEnergy": -1.03,
+      "Atoms": "Ti-P-N"
+    },
+    {
+      "Formula": "Ti2CS",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -1.38,
+      "Atoms": "Ti-S-C"
+    },
+    {
+      "Formula": "Ti2SN2",
+      "CrystalSystem": "Trigonal",
+      "EnergyAboveHull": 0.04,
+      "FormationEnergy": -1.58,
+      "Atoms": "Ti-S-N"
+    },
+    {
+      "Formula": "Ti4S3N2",
+      "CrystalSystem": "Monoclinic",
+      "EnergyAboveHull": 0.16,
+      "FormationEnergy": -1.63,
+      "Atoms": "Ti-S-N"
+    },
+    {
+      "Formula": "Ti4S8N",
+      "CrystalSystem": "Monoclinic",
+      "EnergyAboveHull": 0.38,
+      "FormationEnergy": -1.11,
+      "Atoms": "Ti-S-N"
+    },
+    {
+      "Formula": "TiS2N",
+      "CrystalSystem": "Trigonal",
+      "EnergyAboveHull": 1.22,
+      "FormationEnergy": 0.00662,
+      "Atoms": "Ti-S-N"
+    },
+    {
+      "Formula": "Ti2GaC",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.758,
+      "Atoms": "Ti-Ga-C"
+    },
+    {
+      "Formula": "Ti4GaC3",
+      "CrystalSystem": "Hexagonal",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.805,
+      "Atoms": "Ti-Ga-C"
+    }
+  ]

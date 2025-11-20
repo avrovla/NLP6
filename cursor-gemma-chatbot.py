@@ -3,6 +3,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from pathlib import Path
 import sys
 import os
+import json
 
 # Fix Windows console encoding for emojis
 if sys.platform == 'win32':
@@ -19,6 +20,9 @@ if sys.platform == 'win32':
 class GemmaChatbot:
     def __init__(self):
         """Initialize the chatbot with local Gemma model."""
+        # Initialize materials list first to avoid AttributeError
+        self.materials = []
+        
         # Path to the local model directory
         self.model_path = Path("models") / "models--google--gemma-2-2b-it"
         
@@ -67,6 +71,101 @@ class GemmaChatbot:
         except Exception as e:
             print(f"❌ Error loading model: {e}")
             self.ready = False
+        
+        # Load materials data
+        try:
+            materials_file = Path("materials.json")
+            if materials_file.exists():
+                with open(materials_file, 'r', encoding='utf-8') as f:
+                    self.materials = json.load(f)
+                print(f"✅ Loaded {len(self.materials)} materials from materials.json")
+            else:
+                print("⚠️ Warning: materials.json not found. Material queries will not work.")
+                self.materials = []
+        except Exception as e:
+            print(f"⚠️ Warning: Error loading materials.json: {e}")
+            self.materials = []
+    
+    def is_material_query(self, message: str) -> bool:
+        """Check if the message is about materials."""
+        message_lower = message.lower()
+        material_keywords = [
+            'material', 'materials', 'stable', 'formation energy', 
+            'energy above hull', 'crystal system', 'formula', 
+            'atoms', 'ti', 'titanium', 'compound', 'compounds'
+        ]
+        return any(keyword in message_lower for keyword in material_keywords)
+    
+    def get_stable_materials(self):
+        """Get materials with EnergyAboveHull equals zero."""
+        return [mat for mat in self.materials if mat.get('EnergyAboveHull', None) == 0]
+    
+    def search_materials(self, query: str):
+        """Search materials based on query."""
+        query_lower = query.lower()
+        results = []
+        
+        # Check for stable materials query
+        if any(word in query_lower for word in ['stable', 'stability']):
+            results = self.get_stable_materials()
+            return results
+        
+        # Search by formula
+        for material in self.materials:
+            formula = material.get('Formula', '').lower()
+            if query_lower in formula or formula in query_lower:
+                results.append(material)
+                continue
+            
+            # Search by crystal system
+            crystal_system = material.get('CrystalSystem', '').lower()
+            if query_lower in crystal_system:
+                results.append(material)
+                continue
+            
+            # Search by atoms
+            atoms = material.get('Atoms', '').lower()
+            if query_lower in atoms:
+                results.append(material)
+                continue
+        
+        # If no specific results, return all materials
+        if not results:
+            results = self.materials
+        
+        return results
+    
+    def format_material_response(self, materials: list, query: str) -> str:
+        """Format materials data into a polite response."""
+        if not materials:
+            return "I'm sorry, but I couldn't find any materials matching your query. I can only provide information about materials containing Titanium (Ti)."
+        
+        query_lower = query.lower()
+        
+        # Handle stable materials query
+        if any(word in query_lower for word in ['stable', 'stability']):
+            response = f"I'd be happy to help! I found {len(materials)} stable material(s) (with Energy Above Hull equal to zero) containing Titanium:\n\n"
+        else:
+            response = f"Certainly! I found {len(materials)} material(s) containing Titanium matching your query:\n\n"
+        
+        for i, mat in enumerate(materials[:10], 1):  # Limit to 10 results
+            formula = mat.get('Formula', 'N/A')
+            crystal_system = mat.get('CrystalSystem', 'N/A')
+            energy_above_hull = mat.get('EnergyAboveHull', 'N/A')
+            formation_energy = mat.get('FormationEnergy', 'N/A')
+            atoms = mat.get('Atoms', 'N/A')
+            
+            response += f"{i}. **{formula}**\n"
+            response += f"   - Crystal System: {crystal_system}\n"
+            response += f"   - Energy Above Hull: {energy_above_hull} eV/atom\n"
+            response += f"   - Formation Energy: {formation_energy} eV/atom\n"
+            response += f"   - Atoms: {atoms}\n\n"
+        
+        if len(materials) > 10:
+            response += f"... and {len(materials) - 10} more material(s).\n\n"
+        
+        response += "Is there anything specific you'd like to know about these materials?"
+        return response
     
     def chat(self, message: str, max_new_tokens: int = 256, temperature: float = 0.7) -> str:
         """
@@ -81,12 +180,25 @@ class GemmaChatbot:
             Bot's response
         """
         if not self.ready:
-            return "❌ Model is not loaded."
+            return "I apologize, but the model is not currently loaded. Please check the model files."
         
+        # Check if it's a material query
+        if self.is_material_query(message) and self.materials:
+            try:
+                materials = self.search_materials(message)
+                return self.format_material_response(materials, message)
+            except Exception as e:
+                return f"I'm sorry, I encountered an error while searching for materials: {str(e)}"
+        
+        # Handle non-material queries or if materials aren't loaded
+        if self.is_material_query(message) and not self.materials:
+            return "I apologize, but I'm unable to access the materials database at the moment. The materials.json file may not be available."
+        
+        # For general conversation, use the LLM
         try:
-            # Format prompt in Gemma chat format
+            # Format prompt in Gemma chat format with polite instructions
             prompt = f"""<start_of_turn>user
-{message}<end_of_turn>
+Please respond politely and helpfully. {message}<end_of_turn>
 <start_of_turn>model
 """
             
@@ -119,10 +231,10 @@ class GemmaChatbot:
                 # Fallback: remove the prompt part
                 bot_response = full_response.replace(prompt, "").strip()
             
-            return bot_response if bot_response else "I'm sorry, I couldn't generate a response."
+            return bot_response if bot_response else "I'm sorry, I couldn't generate a response. Could you please rephrase your question?"
             
         except Exception as e:
-            return f"❌ Error: {str(e)}"
+            return f"I apologize, but I encountered an error: {str(e)}. Please try again."
     
     def clear_history(self):
         """Clear conversation history (for future implementation)."""
