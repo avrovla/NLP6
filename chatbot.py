@@ -21,54 +21,29 @@ class GemmaChatbot:
     def __init__(self):
         """Initialize the chatbot with local Gemma model."""
         
-        # Path to the local model directory
-        self.model_path = Path("models") / "models--google--gemma-2-2b-it"
-        
         print("🚀 Loading Gemma from local directory...")
-        print(f"📁 Path: {self.model_path}")
         
-        if not self.model_path.exists():
-            print("❌ Model directory not found!")
-            self.ready = False
-            return
+        # Path to the local model directory
+        model_path = Path("models") / "models--google--gemma-2-2b-it"
+        snapshots_path = model_path / "snapshots"
+        actual_model_path = list(snapshots_path.iterdir())[0]
         
-        # Check for snapshots folder
-        snapshots_path = self.model_path / "snapshots"
-        if not snapshots_path.exists():
-            print("❌ Snapshots folder not found!")
-            self.ready = False
-            return
+        print(f"📁 Model files located at: {actual_model_path}")
         
-        # Find the snapshot directory (first one in snapshots)
-        snapshot_dirs = list(snapshots_path.iterdir())
-        if not snapshot_dirs:
-            print("❌ No snapshots found in folder")
-            self.ready = False
-            return
+        # Load tokenizer and model from local files
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            str(actual_model_path),
+            local_files_only=True
+        )
+        self.model = AutoModelForCausalLM.from_pretrained(
+            str(actual_model_path),
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+            local_files_only=True
+        )
         
-        # Path to actual model files
-        self.actual_model_path = snapshot_dirs[0]
-        print(f"📁 Model files located at: {self.actual_model_path}")
-        
-        try:
-            # Load tokenizer and model from local files
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                str(self.actual_model_path),
-                local_files_only=True
-            )
-            self.model = AutoModelForCausalLM.from_pretrained(
-                str(self.actual_model_path),
-                torch_dtype=torch.bfloat16,
-                device_map="auto",
-                local_files_only=True
-            )
-            
-            print("✅ Gemma loaded successfully from local directory!")
-            self.ready = True
-            
-        except Exception as e:
-            print(f"❌ Error loading model: {e}")
-            self.ready = False
+        print("✅ Gemma loaded successfully from local directory!")
+        self.ready = True
         
         # Load materials data
         materials_file = Path("materials.json")
