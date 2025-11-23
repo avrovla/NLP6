@@ -20,8 +20,6 @@ if sys.platform == 'win32':
 class GemmaChatbot:
     def __init__(self):
         """Initialize the chatbot with local Gemma model."""
-        # Initialize materials list first to avoid AttributeError
-        self.materials = []
         
         # Path to the local model directory
         self.model_path = Path("models") / "models--google--gemma-2-2b-it"
@@ -73,18 +71,10 @@ class GemmaChatbot:
             self.ready = False
         
         # Load materials data
-        try:
-            materials_file = Path("materials.json")
-            if materials_file.exists():
-                with open(materials_file, 'r', encoding='utf-8') as f:
-                    self.materials = json.load(f)
-                print(f"✅ Loaded {len(self.materials)} materials from materials.json")
-            else:
-                print("⚠️ Warning: materials.json not found. Material queries will not work.")
-                self.materials = []
-        except Exception as e:
-            print(f"⚠️ Warning: Error loading materials.json: {e}")
-            self.materials = []
+        materials_file = Path("materials.json")
+        with open(materials_file, 'r', encoding='utf-8') as f:
+            self.materials = json.load(f)
+        print(f"✅ Loaded {len(self.materials)} materials from materials.json")
     
     def is_material_query(self, message: str) -> bool:
         """Check if the message is about materials."""
@@ -217,7 +207,7 @@ class GemmaChatbot:
             return "I apologize, but the model is not currently loaded. Please check the model files."
         
         # Check if it's a material query
-        if self.is_material_query(message) and self.materials:
+        if self.is_material_query(message):
             try:
                 materials = self.search_materials(message)
                 
@@ -259,10 +249,6 @@ Your response should start with a brief acknowledgment, then list ALL the materi
             except Exception as e:
                 return f"I'm sorry, I encountered an error while searching for materials: {str(e)}"
         
-        # Handle non-material queries or if materials aren't loaded
-        elif self.is_material_query(message) and not self.materials:
-            return "I apologize, but I'm unable to access the materials database at the moment. The materials.json file may not be available."
-        
         # For general conversation, use the LLM
         else:
             # Format prompt in Gemma chat format with polite instructions
@@ -275,7 +261,7 @@ Please respond politely and helpfully. {message}<end_of_turn>
         try:
             # Use higher token limit for material queries to ensure all materials are included
             actual_max_tokens = max_new_tokens
-            if self.is_material_query(message) and self.materials:
+            if self.is_material_query(message):
                 actual_max_tokens = max(max_new_tokens, 1024)  # At least 1024 tokens for material queries
             
             # Tokenize input
