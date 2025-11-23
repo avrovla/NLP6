@@ -145,5 +145,75 @@
       "EnergyAboveHull": 0,
       "FormationEnergy": -0.805,
       "Atoms": "Ti-Ga-C"
+    },
+    {
+      "Formula": "TiCu2N3",
+      "CrystalSystem": "Tetragonal",
+      "EnergyAboveHull": 0.58,
+      "FormationEnergy": -0.0711,
+      "Atoms": "Ti-Cu-N"
+    },
+    {
+      "Formula": "Ti3Zn3C",
+      "CrystalSystem": "Cubic",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.442,
+      "Atoms": "Ti-Zn-C"
+    },
+    {
+      "Formula": "Ti6Zn2C",
+      "CrystalSystem": "Tetragonal",
+      "EnergyAboveHull": 0.99,
+      "FormationEnergy": 0.671,
+      "Atoms": "Ti-Zn-C"
+    },
+    {
+      "Formula": "Ti2ZnN",
+      "CrystalSystem": "Orthorhombic",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -1.15,
+      "Atoms": "Ti-Zn-N"
+    },
+    {
+      "Formula": "Ti3Zn3N",
+      "CrystalSystem": "Cubic",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.767,
+      "Atoms": "Ti-Zn-N"
+    },
+    {
+      "Formula": "Ti3ZnN",
+      "CrystalSystem": "Orthorhombic",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -0.971,
+      "Atoms": "Ti-Zn-N"
+    },
+    {
+      "Formula": "TiZnN2",
+      "CrystalSystem": "Orthorhombic",
+      "EnergyAboveHull": 0,
+      "FormationEnergy": -1.03,
+      "Atoms": "Ti-Zn-N"
+    },
+    {
+      "Formula": "Ti(ZnN)4",
+      "CrystalSystem": "Triclinic",
+      "EnergyAboveHull": 0.07,
+      "FormationEnergy": -0.404,
+      "Atoms": "Ti-Zn-N"
+    },
+    {
+      "Formula": "Ti(ZnN)2",
+      "CrystalSystem": "Monoclinic",
+      "EnergyAboveHull": 0.46,
+      "FormationEnergy": -0.364,
+      "Atoms": "Ti-Zn-N"
+    },
+    {
+      "Formula": "Ti2ZnN2",
+      "CrystalSystem": "Tetragonal",
+      "EnergyAboveHull": 1.05,
+      "FormationEnergy": -0.466,
+      "Atoms": "Ti-Zn-N"
     }
   ]
