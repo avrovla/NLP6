@@ -90,8 +90,8 @@ class GemmaChatbot:
         """Check if the message is about materials."""
         message_lower = message.lower()
         material_keywords = [
-            'material', 'materials', 'stable', 'formation energy', 
-            'energy above hull', 'crystal system', 'formula', 
+            'material', 'materials', 'stable', 'unstable', 'stability', 'instability',
+            'formation energy', 'energy above hull', 'crystal system', 'formula', 
             'atoms', 'ti', 'titanium', 'compound', 'compounds'
         ]
         return any(keyword in message_lower for keyword in material_keywords)
@@ -99,6 +99,10 @@ class GemmaChatbot:
     def get_stable_materials(self):
         """Get materials with EnergyAboveHull equals zero."""
         return [mat for mat in self.materials if mat.get('EnergyAboveHull', None) == 0]
+    
+    def get_unstable_materials(self):
+        """Get materials with positive EnergyAboveHull (unstable materials)."""
+        return [mat for mat in self.materials if mat.get('EnergyAboveHull', None) is not None and mat.get('EnergyAboveHull', 0) > 0]
     
     def search_materials(self, query: str):
         """Search materials based on query."""
@@ -108,6 +112,11 @@ class GemmaChatbot:
         # Check for stable materials query
         if any(word in query_lower for word in ['stable', 'stability']):
             results = self.get_stable_materials()
+            return results
+        
+        # Check for unstable materials query
+        if any(word in query_lower for word in ['unstable', 'instability']):
+            results = self.get_unstable_materials()
             return results
         
         # Search by formula
@@ -145,6 +154,9 @@ class GemmaChatbot:
         # Handle stable materials query
         if any(word in query_lower for word in ['stable', 'stability']):
             response = f"I'd be happy to help! I found {len(materials)} stable material(s) (with Energy Above Hull equal to zero) containing Titanium:\n\n"
+        # Handle unstable materials query
+        elif any(word in query_lower for word in ['unstable', 'instability']):
+            response = f"I'd be happy to help! I found {len(materials)} unstable material(s) (with positive Energy Above Hull) containing Titanium:\n\n"
         else:
             response = f"Certainly! I found {len(materials)} material(s) containing Titanium matching your query:\n\n"
         
@@ -211,19 +223,37 @@ class GemmaChatbot:
                 
                 if not materials:
                     materials_context = "No materials found matching the query."
+                    formatted_list = "No materials found."
                 else:
+                    # Get both formatted versions
                     materials_context = self.format_materials_for_llm(materials)
+                    formatted_list = self.format_material_response(materials, message)
                 
-                # Create a prompt that includes the materials data and asks LLM to respond naturally
+                # Create a prompt that includes the materials data and asks LLM to respond with the list
+                query_lower = message.lower()
+                stability_note = ""
+                if any(word in query_lower for word in ['stable', 'stability']):
+                    stability_note = "Remember: stable materials have Energy Above Hull equal to zero."
+                elif any(word in query_lower for word in ['unstable', 'instability']):
+                    stability_note = "Remember: unstable materials have positive Energy Above Hull (greater than zero)."
+                
                 prompt = f"""<start_of_turn>user
 You are a helpful and polite assistant specializing in materials science, particularly materials containing Titanium (Ti). 
 
-Here is information from the materials database:
-{materials_context}
-
 The user asked: {message}
 
-Please provide a polite, helpful, and natural response about these materials. Be conversational and informative. If asked about stable materials, explain that stable materials have Energy Above Hull equal to zero.<end_of_turn>
+Here are the materials from the database that match the query:
+
+{materials_context}
+
+CRITICAL INSTRUCTIONS:
+1. You MUST include ALL materials listed above in your response
+2. For each material, show: Formula, Crystal System, Energy Above Hull (eV/atom), Formation Energy (eV/atom), and Atoms
+3. Format the materials list clearly and readably
+4. Be conversational, intelligent, and provide insights about these materials
+5. {stability_note if stability_note else "Explain what the Energy Above Hull values mean for material stability."}
+
+Your response should start with a brief acknowledgment, then list ALL the materials with their complete details, and end with an insightful comment or question to continue the conversation.<end_of_turn>
 <start_of_turn>model
 """
             except Exception as e:
@@ -243,6 +273,10 @@ Please respond politely and helpfully. {message}<end_of_turn>
         
         # Generate response using LLM
         try:
+            # Use higher token limit for material queries to ensure all materials are included
+            actual_max_tokens = max_new_tokens
+            if self.is_material_query(message) and self.materials:
+                actual_max_tokens = max(max_new_tokens, 1024)  # At least 1024 tokens for material queries
             
             # Tokenize input
             inputs = self.tokenizer(prompt, return_tensors="pt")
@@ -255,7 +289,7 @@ Please respond politely and helpfully. {message}<end_of_turn>
             with torch.no_grad():
                 outputs = self.model.generate(
                     **inputs,
-                    max_new_tokens=max_new_tokens,
+                    max_new_tokens=actual_max_tokens,
                     temperature=temperature,
                     do_sample=True,
                     pad_token_id=self.tokenizer.eos_token_id
